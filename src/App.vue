@@ -2,16 +2,39 @@
 import { ref } from 'vue'
 import ResolutionSelect, { type Resolution } from './components/ResolutionSelect.vue'
 import ZoomSelect, { type Zoom } from './components/ZoomSelect.vue'
+import SceneElementPreview from './components/SceneElementPreview.vue'
+import snowImage from './assets/snow-1280x853.jpg'
+import type { SceneConfig } from './types/scene-config.ts'
 
 const resolution = ref<Resolution>({ width: 640, height: 480 })
 const zoom = ref<Zoom>(1)
+const hoveredSceneElementId = ref<SceneConfig['id'] | null>(null)
+const selectedSceneElementId = ref<SceneConfig['id'] | null>(null)
+const demoScene = ref<SceneConfig[]>([
+  { id: 1, x: 0, y: 0, width: 100, height: 100, zIndex: 1, type: 'rectangle', color: '#818cf8' },
+  { id: 2, x: 0, y: 0, width: 100, height: 100, zIndex: 2, type: 'image', src: snowImage },
+])
 </script>
 
 <template>
   <div class="container">
+    <!-- TODO: remove -->
+    <div style="color: white">
+      <div>Selected: {{ String(selectedSceneElementId) }}</div>
+      <div>Hovered: {{ String(hoveredSceneElementId) }}</div>
+    </div>
     <div class="base-secondary-container options">
       <ResolutionSelect v-model="resolution" />
       <ZoomSelect v-model="zoom" />
+    </div>
+    <div class="base-secondary-container scene-elements-preview">
+      <SceneElementPreview
+        v-for="element of demoScene"
+        :key="element.id"
+        v-model:selected="selectedSceneElementId"
+        v-model:hovered="hoveredSceneElementId"
+        :element="element"
+      />
     </div>
   </div>
 </template>
@@ -21,7 +44,7 @@ const zoom = ref<Zoom>(1)
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  background-color: #1c1c1e;
+  background-color: var(--main-background-color);
 }
 
 .base-secondary-container {
@@ -34,5 +57,13 @@ const zoom = ref<Zoom>(1)
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+}
+
+.scene-elements-preview {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.5rem;
+  overflow-x: auto;
+  scrollbar-color: #475569 #1c1c1e;
 }
 </style>
