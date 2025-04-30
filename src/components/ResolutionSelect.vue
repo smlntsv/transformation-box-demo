@@ -14,20 +14,20 @@ export type ResolutionOption = {
 
 const RESOLUTION_OPTIONS: ResolutionOption[] = [
   {
-    value: { width: 1920, height: 1080 },
     label: '1920x1080 16:9',
+    value: { width: 1920, height: 1080 },
   },
   {
-    value: { width: 1080, height: 1920 },
     label: '1080x1920 9:16',
+    value: { width: 1080, height: 1920 },
   },
   {
-    value: { width: 640, height: 480 },
     label: '640x480 4:3',
+    value: { width: 640, height: 480 },
   },
   {
-    value: { width: 600, height: 600 },
     label: '600x600 1:1',
+    value: { width: 600, height: 600 },
   },
 ]
 
