@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BaseSelect from './BaseSelect.vue'
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineModel } from 'vue'
 
 export type Resolution = {
   width: number
@@ -31,18 +31,7 @@ const RESOLUTION_OPTIONS: ResolutionOption[] = [
   },
 ]
 
-const { modelValue } = defineProps<{
-  modelValue: Resolution
-}>()
-
-const emit = defineEmits<{
-  'update:modelValue': [resolution: Resolution]
-}>()
-
-const resolution = computed({
-  get: () => modelValue,
-  set: (resolution: Resolution) => emit('update:modelValue', resolution),
-})
+const resolution = defineModel<Resolution>()
 </script>
 
 <template>

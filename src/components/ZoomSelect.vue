@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BaseSelect from './BaseSelect.vue'
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineModel } from 'vue'
 
 export type Zoom = number
 
@@ -28,18 +28,7 @@ const ZOOM_OPTIONS: ZoomOption[] = [
   },
 ]
 
-const { modelValue } = defineProps<{
-  modelValue: Zoom
-}>()
-
-const emit = defineEmits<{
-  'update:modelValue': [zoom: Zoom]
-}>()
-
-const zoom = computed({
-  get: () => modelValue,
-  set: (zoom: Zoom) => emit('update:modelValue', zoom),
-})
+const zoom = defineModel<Zoom>()
 </script>
 
 <template>

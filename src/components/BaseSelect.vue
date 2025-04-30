@@ -1,25 +1,17 @@
 <script setup lang="ts">
-import { defineProps, defineEmits, computed } from 'vue'
+import { defineProps, defineModel } from 'vue'
 
 export type BaseSelectOption = {
   label: string
   value: unknown
 }
 
-const { modelValue } = defineProps<{
+defineProps<{
   label: string
   options: BaseSelectOption[]
-  modelValue: unknown
 }>()
 
-const emit = defineEmits<{
-  'update:modelValue': [value: unknown]
-}>()
-
-const selected = computed({
-  get: () => modelValue,
-  set: (value: unknown) => emit('update:modelValue', value),
-})
+const selected = defineModel<unknown>()
 </script>
 
 <template>
