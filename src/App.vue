@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, useTemplateRef } from 'vue'
 import ResolutionSelect, { type Resolution } from './components/ResolutionSelect.vue'
 import ZoomSelect, { type Zoom } from './components/ZoomSelect.vue'
 import SceneElementPreview from './components/SceneElementPreview.vue'
 import snowImage from './assets/snow-1280x853.jpg'
 import type { SceneConfig } from './types/scene-config.ts'
+import { useResizeObserver } from './composables/use-resize-observer.ts'
 
+const previewCanvasContainer = useTemplateRef<HTMLElement>('preview-canvas-container')
+const previewCanvasContainerSize = useResizeObserver(previewCanvasContainer)
 const resolution = ref<Resolution>({ width: 640, height: 480 })
 const zoom = ref<Zoom>(1)
 const hoveredSceneElementId = ref<SceneConfig['id'] | null>(null)
@@ -19,14 +22,30 @@ const demoScene = ref<SceneConfig[]>([
 <template>
   <div class="container">
     <!-- TODO: remove -->
-    <div style="color: white">
+    <div
+      class="base-secondary-container"
+      style="color: white; margin-top: 1rem; margin-bottom: 1rem; word-break: break-all"
+    >
+      <div>Resolution: {{ `${resolution.width}x${resolution.height}` }}</div>
+      <div>Zoom: {{ String(zoom * 100) }}</div>
+      <div>{{ JSON.stringify(previewCanvasContainerSize) }}</div>
       <div>Selected: {{ String(selectedSceneElementId) }}</div>
       <div>Hovered: {{ String(hoveredSceneElementId) }}</div>
     </div>
+
+    <div ref="preview-canvas-container" class="preview-canvas-container">
+      <canvas
+        :width="previewCanvasContainerSize.width"
+        :height="previewCanvasContainerSize.height"
+        :style="{ background: 'white', position: 'absolute' }"
+      ></canvas>
+    </div>
+
     <div class="base-secondary-container options">
       <ResolutionSelect v-model="resolution" />
       <ZoomSelect v-model="zoom" />
     </div>
+
     <div class="base-secondary-container scene-elements-preview">
       <SceneElementPreview
         v-for="element of demoScene"
@@ -53,10 +72,20 @@ const demoScene = ref<SceneConfig[]>([
   background-color: var(--secondary-background-color);
 }
 
+.preview-canvas-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.4rem;
+  background-color: var(--secondary-background-color);
+  display: flex;
+  flex-grow: 1;
+}
+
 .options {
   display: flex;
   flex-wrap: wrap;
   gap: 1rem;
+  margin-top: 0.5rem;
 }
 
 .scene-elements-preview {
@@ -64,6 +93,5 @@ const demoScene = ref<SceneConfig[]>([
   gap: 1rem;
   margin-top: 0.5rem;
   overflow-x: auto;
-  scrollbar-color: #475569 #1c1c1e;
 }
 </style>
