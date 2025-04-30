@@ -1,5 +1,12 @@
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+
+  --main-background-color: #042f2e;
+  --secondary-background-color: #334155;
+}
+
+html {
+  background-color: var(--main-background-color);
 }
 
 body {
