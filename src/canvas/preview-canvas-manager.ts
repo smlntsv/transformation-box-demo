@@ -107,16 +107,18 @@ class PreviewCanvasManager {
     this.viewport.applyTransform(this.context)
     this.camera.applyTransform(this.context)
 
-    // Draw Artboard
+    // Artboard
     this.drawArtboard()
 
-    // Render scene elements
+    // Scene elements
     const elementsToRender: SceneElement[] = Array.from(this.sceneElements.values()).sort(
       (a, b) => a.getZIndex() - b.getZIndex()
     )
     for (const element of elementsToRender) {
       element.draw(this.context)
     }
+
+    // Transformation tool
 
     // Debug elements
     this.context.save()
@@ -160,8 +162,8 @@ class PreviewCanvasManager {
     return true
   }
 
-  private onScroll(zoomDelta: number, _screenX: number, _screenY: number): boolean {
-    this.camera.adjustZoomWithBounds(zoomDelta / 40)
+  private onScroll(zoomDelta: number, screenX: number, screenY: number): boolean {
+    this.camera.adjustZoomWithBounds(zoomDelta, screenX, screenY)
     this.render()
 
     return true

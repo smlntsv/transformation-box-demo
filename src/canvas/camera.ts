@@ -1,7 +1,7 @@
 import { Vector2 } from './vector2.ts'
 
 class Camera {
-  private position: Vector2
+  private readonly position: Vector2
   private zoom: number
   private readonly rotation: number
   private readonly minZoom: number
@@ -43,15 +43,20 @@ class Camera {
     this.zoom = zoom
   }
 
-  // TODO: improve
-  public adjustZoomWithBounds(zoomDelta: number) {
-    let nextZoom = this.zoom + zoomDelta
+  public adjustZoomWithBounds(zoomDelta: number, screenX: number, screenY: number) {
+    const currentZoom = this.zoom
+    let nextZoom = currentZoom + zoomDelta / 40
+    nextZoom = Math.max(this.minZoom, Math.min(nextZoom, this.maxZoom))
 
-    if (nextZoom < this.minZoom) {
-      nextZoom = this.minZoom
-    } else if (nextZoom > this.maxZoom) {
-      nextZoom = this.maxZoom
+    if (nextZoom === currentZoom) {
+      return
     }
+
+    const worldX = (screenX - this.position.x) / currentZoom
+    const worldY = (screenY - this.position.y) / currentZoom
+
+    this.position.x = screenX - worldX * nextZoom
+    this.position.y = screenY - worldY * nextZoom
 
     this.zoom = nextZoom
   }
