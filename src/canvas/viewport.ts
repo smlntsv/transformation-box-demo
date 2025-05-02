@@ -41,8 +41,8 @@ class Viewport {
     }
   }
 
-  public applyTransform(ctx: CanvasRenderingContext2D) {
-    ctx.scale(this.dpr, this.dpr)
+  public getScale(): number {
+    return this.dpr
   }
 
   private onParentResize(parentContentRect: DOMRectReadOnly) {

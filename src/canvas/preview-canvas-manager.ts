@@ -104,7 +104,8 @@ class PreviewCanvasManager {
     this.context.resetTransform()
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
-    this.viewport.applyTransform(this.context)
+    const scale = this.viewport.getScale()
+    this.context.scale(scale, scale)
 
     const { a, b, c, d, e, f } = this.camera.matrix
     this.context.transform(a, b, c, d, e, f)
