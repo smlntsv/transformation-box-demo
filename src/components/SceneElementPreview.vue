@@ -1,24 +1,11 @@
 <script setup lang="ts">
-import {
-  defineProps,
-  computed,
-  defineModel,
-  withDefaults,
-  onMounted,
-  onBeforeUnmount,
-  useTemplateRef,
-} from 'vue'
+import { defineProps, computed, defineModel, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 import type { SceneConfig } from '../types/scene-config.ts'
 
-const { element, resetSelectionOnParentClick } = withDefaults(
-  defineProps<{
-    element: SceneConfig
-    resetSelectionOnParentClick?: boolean
-  }>(),
-  {
-    resetSelectionOnParentClick: true,
-  }
-)
+const { element, resetSelectionOnParentClick = true } = defineProps<{
+  element: SceneConfig
+  resetSelectionOnParentClick?: boolean
+}>()
 
 const button = useTemplateRef<HTMLButtonElement>('button')
 
