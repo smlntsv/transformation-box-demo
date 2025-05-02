@@ -19,4 +19,4 @@ type ImageConfig = BaseElementConfig & {
 
 type SceneConfig = RectangleConfig | ImageConfig
 
-export type { SceneConfig }
+export type { SceneConfig, BaseElementConfig, RectangleConfig, ImageConfig }
