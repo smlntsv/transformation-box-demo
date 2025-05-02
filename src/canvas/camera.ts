@@ -6,6 +6,8 @@ class Camera {
   private readonly rotation: number
   private readonly minZoom: number
   private readonly maxZoom: number
+  private _matrix: DOMMatrix
+  private matrixNeedsUpdate: boolean
 
   constructor(
     position: Vector2 = new Vector2(0, 0),
@@ -18,17 +20,27 @@ class Camera {
     this.minZoom = minZoom
     this.maxZoom = maxZoom
     this.rotation = 0
+    this._matrix = new DOMMatrix()
+    this.matrixNeedsUpdate = true
   }
 
-  public applyTransform(ctx: CanvasRenderingContext2D) {
-    ctx.translate(this.position.x, this.position.y)
-    ctx.rotate(this.rotation)
-    ctx.scale(this.zoom, this.zoom)
+  public get matrix(): DOMMatrix {
+    if (this.matrixNeedsUpdate) {
+      this._matrix = new DOMMatrix()
+        .translateSelf(this.position.x, this.position.y)
+        .rotateSelf(0, 0, this.rotation)
+        .scaleSelf(this.zoom, this.zoom)
+
+      this.matrixNeedsUpdate = false
+    }
+
+    return this._matrix
   }
 
   public moveBy(delta: Vector2) {
     this.position.x += delta.x
     this.position.y += delta.y
+    this.matrixNeedsUpdate = true
   }
 
   public getPosition(): Camera['position'] {
@@ -41,6 +53,7 @@ class Camera {
 
   public setZoom(zoom: number) {
     this.zoom = zoom
+    this.matrixNeedsUpdate = true
   }
 
   public adjustZoomWithBounds(zoomDelta: number, screenX: number, screenY: number) {
@@ -52,13 +65,15 @@ class Camera {
       return
     }
 
-    const worldX = (screenX - this.position.x) / currentZoom
-    const worldY = (screenY - this.position.y) / currentZoom
+    const screenPoint = new DOMPoint(screenX, screenY)
+    const inverseMatrix = this._matrix.inverse()
+    const worldPoint = screenPoint.matrixTransform(inverseMatrix)
 
-    this.position.x = screenX - worldX * nextZoom
-    this.position.y = screenY - worldY * nextZoom
+    this.position.x = screenX - worldPoint.x * nextZoom
+    this.position.y = screenY - worldPoint.y * nextZoom
 
     this.zoom = nextZoom
+    this.matrixNeedsUpdate = true
   }
 }
 

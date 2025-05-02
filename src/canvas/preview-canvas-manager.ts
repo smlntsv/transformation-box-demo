@@ -105,7 +105,9 @@ class PreviewCanvasManager {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height)
 
     this.viewport.applyTransform(this.context)
-    this.camera.applyTransform(this.context)
+
+    const { a, b, c, d, e, f } = this.camera.matrix
+    this.context.transform(a, b, c, d, e, f)
 
     // Artboard
     this.drawArtboard()
