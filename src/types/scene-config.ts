@@ -1,9 +1,11 @@
+type Point = { x: number; y: number }
+
 type BaseElementConfig = {
   id: number
-  x: number
-  y: number
-  width: number
-  height: number
+  position: Point
+  size: Point
+  scale: Point
+  rotation: number
   zIndex: number
 }
 
