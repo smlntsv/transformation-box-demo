@@ -27,8 +27,6 @@ abstract class SceneElement {
     this.matrixNeedsUpdate = true
   }
 
-  abstract contains(_screenPoint: Vector2): boolean
-
   protected abstract drawSelf(context: CanvasRenderingContext2D): void
 
   public draw(context: CanvasRenderingContext2D) {
@@ -48,6 +46,19 @@ abstract class SceneElement {
     }
 
     context.restore()
+  }
+
+  public contains(worldX: number, worldY: number): boolean {
+    const worldPoint = new DOMPoint(worldX, worldY)
+    const inverseMatrix = this.matrix.inverse()
+    const localPoint = worldPoint.matrixTransform(inverseMatrix)
+
+    return (
+      localPoint.x >= -this.size.x / 2 &&
+      localPoint.x <= this.size.x / 2 &&
+      localPoint.y >= -this.size.y / 2 &&
+      localPoint.y <= this.size.y / 2
+    )
   }
 
   public get matrix(): DOMMatrix {
