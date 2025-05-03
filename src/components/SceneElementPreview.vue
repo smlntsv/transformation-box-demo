@@ -84,10 +84,9 @@ onBeforeUnmount(() => {
 
 .scene-element--hovered {
   transform: scale(0.98);
-  transition-duration: 0.1s;
   cursor: pointer;
 
-  outline: 0.1rem dashed #60a5fa;
+  outline: 0.1rem dashed #ffffff;
   box-shadow: 0 0 8px 2px #2563eb;
 }
 

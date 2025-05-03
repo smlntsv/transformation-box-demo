@@ -1,25 +1,23 @@
 <script setup lang="ts">
 import {
-  defineProps,
   defineModel,
-  useTemplateRef,
-  onMounted,
+  defineProps,
   onBeforeUnmount,
+  onMounted,
   ref,
+  useTemplateRef,
   watch,
 } from 'vue'
+import type { ModelRef } from 'vue'
 import type { SceneConfig } from '../types/scene-config.ts'
 import type { Resolution } from './ResolutionSelect.vue'
 import type { Zoom } from './ZoomSelect.vue'
-import { PreviewCanvasManager } from './../canvas/preview-canvas-manager.ts'
+import { PreviewCanvasManager, SceneElementEvent } from './../canvas/preview-canvas-manager.ts'
 
 const { resolution, zoom } = defineProps<{
   resolution: Resolution
   zoom: Zoom
 }>()
-
-// emit hover, select, transform event and process in the parent component
-// or modify in-place?
 
 const selected = defineModel<SceneConfig['id'] | null>('selected', { default: null })
 const hovered = defineModel<SceneConfig['id'] | null>('hovered', { default: null })
@@ -27,8 +25,46 @@ const elements = defineModel<SceneConfig[]>('elements', { default: [] })
 const canvasRef = useTemplateRef('canvas')
 const manager = ref<PreviewCanvasManager>()
 
+function updateSelectedHoveredState(
+  id: SceneConfig['id'] | null,
+  state: ModelRef<SceneConfig['id'] | null>
+) {
+  if (id === null) {
+    if (state.value) {
+      state.value = null
+    }
+
+    if (canvasRef.value && canvasRef.value.style.cursor !== 'inherit') {
+      canvasRef.value.style.cursor = 'inherit'
+    }
+
+    return
+  }
+
+  for (const element of elements.value) {
+    if (element.id === id) {
+      state.value = element.id
+      break
+    }
+  }
+
+  if (canvasRef.value && canvasRef.value.style.cursor !== 'pointer') {
+    canvasRef.value.style.cursor = 'pointer'
+  }
+}
+
+function onElementHover(id: SceneConfig['id'] | null) {
+  updateSelectedHoveredState(id, hovered)
+}
+
+function onElementSelect(id: SceneConfig['id'] | null) {
+  updateSelectedHoveredState(id, selected)
+}
+
 onMounted(() => {
   manager.value = new PreviewCanvasManager(canvasRef.value as HTMLCanvasElement)
+  manager.value.addEventListener(SceneElementEvent.Hover, onElementHover)
+  manager.value.addEventListener(SceneElementEvent.Select, onElementSelect)
   manager.value.onElementsChange(elements.value)
   manager.value.onResolutionChange(resolution)
   manager.value.onZoomChange(zoom)
@@ -53,12 +89,12 @@ watch(elements, (newElements) => {
   manager.value?.onElementsChange(newElements)
 })
 
-watch(hovered, (newHovered, prevHovered) => {
-  manager.value?.onHoverElement(newHovered, prevHovered)
+watch(hovered, (newHovered) => {
+  manager.value?.onHoverElement(newHovered)
 })
 
-watch(selected, (newSelected, prevSelected) => {
-  manager.value?.onSelectElement(newSelected, prevSelected)
+watch(selected, (newSelected) => {
+  manager.value?.onSelectElement(newSelected)
 })
 
 onBeforeUnmount(() => {
