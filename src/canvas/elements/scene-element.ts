@@ -1,6 +1,5 @@
 import type { BaseElementConfig } from '../../types/scene-config.ts'
 import { Vector2 } from '../vector2.ts'
-import { applyHoveredStyle, applySelectedStyle } from './draw-utils.ts'
 
 abstract class SceneElement {
   protected id: number
@@ -9,8 +8,6 @@ abstract class SceneElement {
   protected rotation: number
   protected zIndex: number
   protected scale: Vector2
-  protected isSelected: boolean
-  protected isHovered: boolean
   protected _matrix: DOMMatrix
   protected matrixNeedsUpdate: boolean
 
@@ -21,8 +18,6 @@ abstract class SceneElement {
     this.scale = new Vector2(config.scale.x, config.scale.y)
     this.rotation = config.rotation
     this.zIndex = config.zIndex
-    this.isSelected = false
-    this.isHovered = false
     this._matrix = new DOMMatrix()
     this.matrixNeedsUpdate = true
   }
@@ -36,14 +31,6 @@ abstract class SceneElement {
     context.transform(a, b, c, d, e, f)
 
     this.drawSelf(context)
-
-    if (this.isHovered) {
-      applyHoveredStyle(context, -this.size.x / 2, -this.size.y / 2, this.size.x, this.size.y)
-    }
-
-    if (this.isSelected) {
-      applySelectedStyle(context, -this.size.x / 2, -this.size.y / 2, this.size.x, this.size.y)
-    }
 
     context.restore()
   }
@@ -82,20 +69,16 @@ abstract class SceneElement {
     return this.zIndex
   }
 
-  public getIsSelected(): SceneElement['isSelected'] {
-    return this.isSelected
-  }
+  public getLocalCorners(): DOMPoint[] {
+    const halfWidth = this.size.x / 2
+    const halfHeight = this.size.y / 2
 
-  public setIsSelected(isSelected: boolean): void {
-    this.isSelected = isSelected
-  }
-
-  public getIsHovered(): SceneElement['isHovered'] {
-    return this.isHovered
-  }
-
-  public setIsHovered(isHovered: boolean): void {
-    this.isHovered = isHovered
+    return [
+      new DOMPoint(-halfWidth, halfHeight),
+      new DOMPoint(halfWidth, halfHeight),
+      new DOMPoint(halfWidth, -halfHeight),
+      new DOMPoint(-halfWidth, -halfHeight),
+    ]
   }
 }
 
