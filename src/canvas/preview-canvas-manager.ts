@@ -7,16 +7,17 @@ import type { SceneElement } from './elements/scene-element.ts'
 import { createSceneElement } from './create-scene-element.ts'
 import type { Resolution } from '../components/ResolutionSelect.vue'
 import type { Zoom } from '../components/ZoomSelect.vue'
+import { TransformationTool } from './transformation-tool.ts'
 
 export type SceneElementEventListener = (id: SceneElement['id'] | null) => void
 export enum SceneElementEvent {
   Hover,
   Select,
+  Transform,
 }
 
 class PreviewCanvasManager {
   private readonly canvas: HTMLCanvasElement
-  private readonly context: CanvasRenderingContext2D
   private viewport: Viewport
   private camera: Camera
   private interactionManager: InteractionManager
@@ -28,6 +29,9 @@ class PreviewCanvasManager {
   private sceneElements: Map<SceneElement['id'], SceneElement>
   private selectedElement: SceneElement | null
   private hoveredElement: SceneElement | null
+  private transformationTool: TransformationTool | null
+
+  private readonly context: CanvasRenderingContext2D
 
   constructor(canvas: HTMLCanvasElement) {
     this.onPointerMove = this.onPointerMove.bind(this)
@@ -45,12 +49,15 @@ class PreviewCanvasManager {
       this.onPanning,
       this.onScroll
     )
-    this.sceneElements = new Map()
-    this.selectedElement = null
-    this.hoveredElement = null
     this.artboardResolution = { width: 0, height: 0 } // TODO: set actual value
     this.elementHoverListeners = new Set()
     this.elementSelectListeners = new Set()
+
+    this.sceneElements = new Map()
+    this.selectedElement = null
+    this.hoveredElement = null
+    this.transformationTool = null
+
     const context = this.canvas.getContext('2d')
 
     if (!context) {
@@ -101,6 +108,8 @@ class PreviewCanvasManager {
     for (const configElement of sceneConfig) {
       const sceneElement = createSceneElement(configElement)
       sceneElements.set(sceneElement['id'], sceneElement)
+
+      this.transformationTool = new TransformationTool(sceneElement, this.viewport, this.camera)
     }
 
     this.sceneElements = sceneElements
@@ -123,6 +132,16 @@ class PreviewCanvasManager {
       this.selectedElement = null
     } else {
       this.selectedElement = this.sceneElements.get(id) ?? null
+    }
+
+    if (this.selectedElement) {
+      this.transformationTool = new TransformationTool(
+        this.selectedElement,
+        this.viewport,
+        this.camera
+      )
+    } else {
+      this.transformationTool = null
     }
 
     this.render()
@@ -156,7 +175,7 @@ class PreviewCanvasManager {
       element.draw(this.context)
     }
 
-    // Overlays in screen space
+    // Overlays hovered/selected/transformation tool in screen space
     if (this.hoveredElement) {
       this.drawOverlayForElement(this.hoveredElement, 'hovered')
     }
@@ -165,14 +184,9 @@ class PreviewCanvasManager {
       this.drawOverlayForElement(this.selectedElement, 'selected')
     }
 
-    // Transformation tool
-
-    // Debug elements
-    this.context.save()
-    this.context.fillStyle = 'white'
-    this.context.fillRect(0, 0, 10, 10)
-
-    this.renderCameraDebugInfo()
+    if (this.transformationTool) {
+      this.transformationTool.draw(this.context)
+    }
   }
 
   private drawOverlayForElement(element: SceneElement, type: 'hovered' | 'selected') {
@@ -214,27 +228,6 @@ class PreviewCanvasManager {
     this.context.restore()
   }
 
-  private renderCameraDebugInfo() {
-    this.context.save()
-    this.context.resetTransform()
-    this.context.getTransform().toString()
-    this.context.shadowColor = 'black'
-    this.context.shadowOffsetX = 0
-    this.context.shadowOffsetY = 0
-    this.context.shadowBlur = 20
-    this.context.fillStyle = 'white'
-    this.context.font = '28px monospace'
-    const cameraPosition = this.camera.getPosition()
-    const cameraZoom = this.camera.getZoom()
-    this.context.fillText(
-      `x: ${Math.floor(cameraPosition.x)}, y: ${Math.floor(cameraPosition.y)}, zoom: ${Math.floor(cameraZoom * 100) / 100}`,
-      20,
-      40
-    )
-
-    this.context.restore()
-  }
-
   private onPointerMove(screenX: number, screenY: number) {
     const hitElement = this.hitTest(screenX, screenY)
     this.notifyElementHover(hitElement ? hitElement.getId() : null)
@@ -253,6 +246,10 @@ class PreviewCanvasManager {
     const screenPoint = new DOMPoint(screenX, screenY)
     const inverseMatrix = this.camera.matrix.inverse()
     const worldPoint = screenPoint.matrixTransform(inverseMatrix)
+
+    if (this.transformationTool) {
+      // Check if of the transformation tool handles click
+    }
 
     const sceneElementsSortedDesc: SceneElement[] = Array.from(this.sceneElements.values()).sort(
       (a, b) => b.getZIndex() - a.getZIndex()

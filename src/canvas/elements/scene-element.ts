@@ -73,11 +73,12 @@ abstract class SceneElement {
     const halfWidth = this.size.x / 2
     const halfHeight = this.size.y / 2
 
+    // top left, top right, bottom right, bottom left
     return [
-      new DOMPoint(-halfWidth, halfHeight),
-      new DOMPoint(halfWidth, halfHeight),
-      new DOMPoint(halfWidth, -halfHeight),
       new DOMPoint(-halfWidth, -halfHeight),
+      new DOMPoint(halfWidth, -halfHeight),
+      new DOMPoint(halfWidth, halfHeight),
+      new DOMPoint(-halfWidth, halfHeight),
     ]
   }
 }
