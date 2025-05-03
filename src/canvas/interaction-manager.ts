@@ -5,12 +5,14 @@ type PanningState = {
 }
 
 type ClickHandler = (screenX: number, screenY: number) => boolean
+type MoveHandler = ClickHandler
 type PanningHandler = (screenDX: number, screenDY: number) => boolean
 type ScrollHandler = (zoomDelta: number, screenX: number, screenY: number) => boolean
 
 class InteractionManager {
   private canvas: HTMLCanvasElement
   private panningState: PanningState
+  private readonly onMove: MoveHandler
   private readonly onClick: ClickHandler
   private readonly onPanning: PanningHandler
   private readonly onScroll: ScrollHandler
@@ -18,6 +20,7 @@ class InteractionManager {
 
   constructor(
     canvas: HTMLCanvasElement,
+    onMove: MoveHandler,
     onClick: ClickHandler,
     onPanning: PanningHandler,
     onScroll: ScrollHandler
@@ -33,6 +36,7 @@ class InteractionManager {
       startX: 0,
       startY: 0,
     }
+    this.onMove = onMove
     this.onClick = onClick
     this.onPanning = onPanning
     this.onScroll = onScroll
@@ -68,6 +72,8 @@ class InteractionManager {
       this.panningState.startY = e.clientY
 
       this.onPanning(dx, dy)
+    } else {
+      this.onMove(e.offsetX, e.offsetY)
     }
   }
 
