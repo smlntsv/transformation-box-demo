@@ -25,7 +25,11 @@ class PreviewCanvasManager {
 
   private readonly context: CanvasRenderingContext2D
 
-  constructor(canvas: HTMLCanvasElement) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    initialArtboardResolution: ArtboardResolution,
+    initialZoom: Zoom
+  ) {
     this.onPointerDown = this.onPointerDown.bind(this)
     this.onPointerUp = this.onPointerUp.bind(this)
     this.onPointerMove = this.onPointerMove.bind(this)
@@ -33,7 +37,7 @@ class PreviewCanvasManager {
 
     this.canvas = canvas
     this.viewport = new Viewport(this.canvas, this.render.bind(this))
-    this.camera = new Camera(new Vector2(0, 0), 1) // TODO: set actual value
+    this.camera = new Camera(new Vector2(0, 0), initialZoom)
     this.interactionManager = new InteractionManager(
       this.canvas,
       this.onPointerDown,
@@ -41,7 +45,7 @@ class PreviewCanvasManager {
       this.onPointerMove,
       this.onScroll
     )
-    this.artboardResolution = { width: 0, height: 0 } // TODO: set actual value
+    this.artboardResolution = initialArtboardResolution
     this.sceneElementEventManager = new SceneEventManager()
 
     this.sceneElements = new Map()
@@ -79,8 +83,6 @@ class PreviewCanvasManager {
   }
 
   public onZoomChange(zoom: Zoom) {
-    // TODO: set zoom
-    // TODO: align artboard in the center of the screen
     this.camera.setZoom(zoom)
     this.render()
   }
@@ -304,17 +306,14 @@ class PreviewCanvasManager {
   }
 
   private drawArtboard() {
-    // TODO: check value on init
-    if (this.artboardResolution) {
-      this.context.save()
+    this.context.save()
 
-      this.context.fillStyle = '#6b7280'
-      this.context.shadowColor = '#1f2937'
-      this.context.shadowBlur = 20
-      this.context.fillRect(0, 0, this.artboardResolution.width, this.artboardResolution.height)
+    this.context.fillStyle = '#6b7280'
+    this.context.shadowColor = '#1f2937'
+    this.context.shadowBlur = 20
+    this.context.fillRect(0, 0, this.artboardResolution.width, this.artboardResolution.height)
 
-      this.context.restore()
-    }
+    this.context.restore()
   }
 }
 

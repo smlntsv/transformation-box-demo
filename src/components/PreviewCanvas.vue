@@ -70,14 +70,16 @@ function onZoomChange(newZoom: number) {
 }
 
 onMounted(() => {
-  manager.value = new PreviewCanvasManager(canvasRef.value as HTMLCanvasElement)
+  manager.value = new PreviewCanvasManager(
+    canvasRef.value as HTMLCanvasElement,
+    artboardResolution,
+    zoom.value
+  )
   manager.value.addEventListener(SceneEvent.ElementHover, onElementHover)
   manager.value.addEventListener(SceneEvent.ElementSelect, onElementSelect)
   manager.value.addEventListener(SceneEvent.ElementTransform, onElementTransform)
   manager.value.addEventListener(SceneEvent.ZoomChange, onZoomChange)
   manager.value.onElementsChange(elements.value)
-  manager.value.onArtboardResolutionChange(artboardResolution)
-  manager.value.onZoomChange(zoom.value)
   manager.value.render()
 })
 
