@@ -2,6 +2,8 @@
 import { defineProps, computed, defineModel, onMounted, onBeforeUnmount, useTemplateRef } from 'vue'
 import type { SceneConfig } from '../types/scene-config.ts'
 
+const isDebugMode = !import.meta.env.PROP
+
 const { element, resetSelectionOnParentClick = true } = defineProps<{
   element: SceneConfig
   resetSelectionOnParentClick?: boolean
@@ -67,19 +69,32 @@ onBeforeUnmount(() => {
     @click="onClick"
     @mouseover="onMouseOverAndOut(true)"
     @mouseout="onMouseOverAndOut(false)"
-  />
+  >
+    <template v-if="isDebugMode">
+      <div>Position</div>
+      <div>{{ element.position.x.toFixed(2) }} : {{ element.position.y.toFixed(2) }}</div>
+      <div>Scale</div>
+      <div>{{ element.scale.x.toFixed(2) }} : {{ element.scale.y.toFixed(2) }}</div>
+      <div>Rotation {{ element.rotation.toFixed(2) }}</div>
+    </template>
+  </button>
 </template>
 
 <style scoped>
 .scene-element {
   display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: flex-start;
   flex-shrink: 0;
   width: 6rem;
   height: 6rem;
   border: none;
+  font-size: 0.6rem;
   border-radius: 0.4rem;
   outline-offset: 0.2rem;
   will-change: transform;
+  color: white;
 }
 
 .scene-element--hovered {
