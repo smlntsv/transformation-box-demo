@@ -52,10 +52,24 @@ function onElementSelect(id: SceneConfig['id'] | null) {
   updateSelectedHoveredState(id, selected)
 }
 
+function onElementTransform(sceneConfig: SceneConfig) {
+  for (const element of elements.value) {
+    if (element.id === sceneConfig.id) {
+      element.position.x = sceneConfig.position.x
+      element.position.y = sceneConfig.position.y
+      element.scale.x = sceneConfig.scale.x
+      element.scale.y = sceneConfig.scale.y
+      element.rotation = sceneConfig.rotation
+      break
+    }
+  }
+}
+
 onMounted(() => {
   manager.value = new PreviewCanvasManager(canvasRef.value as HTMLCanvasElement)
   manager.value.addEventListener(SceneElementEvent.Hover, onElementHover)
   manager.value.addEventListener(SceneElementEvent.Select, onElementSelect)
+  manager.value.addEventListener(SceneElementEvent.Transform, onElementTransform)
   manager.value.onElementsChange(elements.value)
   manager.value.onResolutionChange(resolution)
   manager.value.onZoomChange(zoom)
@@ -89,6 +103,9 @@ watch(selected, (newSelected) => {
 })
 
 onBeforeUnmount(() => {
+  manager.value?.removeEventListener(SceneElementEvent.Hover, onElementHover)
+  manager.value?.removeEventListener(SceneElementEvent.Select, onElementSelect)
+  manager.value?.removeEventListener(SceneElementEvent.Transform, onElementTransform)
   manager.value?.destroy()
 })
 </script>
