@@ -1,4 +1,3 @@
-import { Vector2 } from './vector2.ts'
 import { Viewport } from './viewport.ts'
 import { Camera } from './camera.ts'
 import { InteractionManager } from './interaction-manager.ts'
@@ -37,7 +36,7 @@ class PreviewCanvasManager {
 
     this.canvas = canvas
     this.viewport = new Viewport(this.canvas, this.render.bind(this))
-    this.camera = new Camera(new Vector2(0, 0), initialZoom)
+    this.camera = new Camera(new DOMPoint(), initialZoom)
     this.interactionManager = new InteractionManager(
       this.canvas,
       this.onPointerDown,

@@ -16,9 +16,9 @@ const selectedSceneElementId = ref<SceneConfig['id'] | null>(null)
 const demoScene = ref<SceneConfig[]>([
   {
     id: 1,
-    position: { x: 0, y: 0 },
+    position: { x: 400, y: 200 },
     size: { x: 1280, y: 853 },
-    scale: { x: 1, y: 1 },
+    scale: { x: 0.4, y: 0.4 },
     rotation: 0,
     zIndex: 1,
     type: 'image',
@@ -26,23 +26,13 @@ const demoScene = ref<SceneConfig[]>([
   },
   {
     id: 2,
-    position: { x: 100, y: 200 },
+    position: { x: 140, y: 200 },
     size: { x: 100, y: 100 },
-    scale: { x: 0.5, y: 0.5 },
+    scale: { x: 0.6, y: 0.6 },
     rotation: 0,
     zIndex: 2,
     type: 'rectangle',
     color: '#818cf8',
-  },
-  {
-    id: 3,
-    position: { x: 200, y: 400 },
-    size: { x: 100, y: 100 },
-    scale: { x: 1, y: 1 },
-    rotation: 0,
-    zIndex: 3,
-    type: 'rectangle',
-    color: 'red',
   },
 ])
 </script>

@@ -1,7 +1,5 @@
-import { Vector2 } from './vector2.ts'
-
 class Camera {
-  private readonly position: Vector2
+  private readonly position: DOMPoint
   private zoom: number
   private readonly rotation: number
   private readonly minZoom: number
@@ -9,10 +7,10 @@ class Camera {
   private _matrix: DOMMatrix
   private matrixNeedsUpdate: boolean
   private isPanning: boolean
-  private lastPointerPosition: Vector2 | null
+  private lastPointerPosition: DOMPoint | null
 
   constructor(
-    position: Vector2 = new Vector2(0, 0),
+    position: DOMPoint = new DOMPoint(),
     zoom: number = 1,
     minZoom: number = 0.1,
     maxZoom = 10
@@ -33,7 +31,7 @@ class Camera {
   }
 
   public beginPanning(screenX: number, screenY: number): void {
-    this.lastPointerPosition = new Vector2(screenX, screenY)
+    this.lastPointerPosition = new DOMPoint(screenX, screenY)
     this.isPanning = true
   }
 
@@ -50,8 +48,8 @@ class Camera {
     const dx = screenX - this.lastPointerPosition.x
     const dy = screenY - this.lastPointerPosition.y
 
-    this.moveBy(new Vector2(dx, dy))
-    this.lastPointerPosition = new Vector2(screenX, screenY)
+    this.moveBy(new DOMPoint(dx, dy))
+    this.lastPointerPosition = new DOMPoint(screenX, screenY)
   }
 
   public get matrix(): DOMMatrix {
@@ -67,7 +65,7 @@ class Camera {
     return this._matrix
   }
 
-  public moveBy(delta: Vector2) {
+  public moveBy(delta: DOMPoint) {
     this.position.x += delta.x
     this.position.y += delta.y
     this.matrixNeedsUpdate = true

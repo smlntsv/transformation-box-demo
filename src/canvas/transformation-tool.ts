@@ -1,7 +1,6 @@
 import type { SceneElement } from './elements/scene-element.ts'
 import type { Viewport } from './viewport.ts'
 import type { Camera } from './camera.ts'
-import { Vector2 } from './vector2.ts'
 
 const ROTATE_ICON_PATH =
   'M17.91 26.8199L18.26 28.8199C19.7529 28.5596 21.1881 28.0383 22.5 27.2799L21.5 25.5499C20.3872 26.1806 19.172 26.6105 17.91 26.8199ZM24.42 23.0699L26 24.3499C26.9686 23.1869 27.7267 21.8637 28.24 20.4399L26.3701 19.7599C25.9192 20.9691 25.2592 22.0895 24.42 23.0699ZM9.50005 27.2499C10.812 28.0083 12.2472 28.5296 13.74 28.7899L14.09 26.7899C12.8262 26.5712 11.6109 26.1311 10.5 25.4899L9.50005 27.2499ZM5.67005 19.7599L3.80005 20.4399C4.30124 21.8609 5.04566 23.1839 6.00005 24.3499L6.32005 24.0899L7.54005 23.0899C6.71513 22.1065 6.06871 20.9862 5.63005 19.7799L5.67005 19.7599ZM29 15.9999C28.9963 14.4844 28.7255 12.9814 28.2001 11.5599L26.33 12.2399C26.767 13.4456 26.9936 14.7175 27 15.9999H29ZM26 7.64992C24.7801 6.1813 23.2517 4.9994 21.5234 4.18824C19.795 3.37707 17.9093 2.95654 16 2.95654C14.0908 2.95654 12.2051 3.37707 10.4767 4.18824C8.74842 4.9994 7.21998 6.1813 6.00005 7.64992V3.99992H4.00005V11.9999H12V9.99992H6.81005C7.7486 8.5661 9.00918 7.37139 10.4913 6.51107C11.9733 5.65074 13.6359 5.14859 15.3465 5.04466C17.057 4.94072 18.7682 5.23788 20.3435 5.91244C21.9188 6.58699 23.3148 7.62028 24.42 8.92992L26 7.64992Z'
@@ -38,7 +37,7 @@ const HANDLE_CURSOR: Record<
 
 type Handle = {
   type: HandleType
-  position: Vector2
+  position: DOMPoint
 }
 
 const PROPORTIONAL_SCALE_HANDLE_SIZE = 8
@@ -72,18 +71,18 @@ const OPPOSITE_HANDLES: Record<HandleType, HandleType> = {
   [HandleType.Translate]: HandleType.Translate,
 }
 
-const HANDLE_LOCAL_POSITIONS: Record<HandleType, Vector2> = {
-  [HandleType.TopLeft]: { x: -0.5, y: -0.5 },
-  [HandleType.TopCenter]: { x: 0.0, y: -0.5 },
-  [HandleType.TopRight]: { x: 0.5, y: -0.5 },
-  [HandleType.RightCenter]: { x: 0.5, y: 0.0 },
-  [HandleType.BottomRight]: { x: 0.5, y: 0.5 },
-  [HandleType.BottomCenter]: { x: 0.0, y: 0.5 },
-  [HandleType.BottomLeft]: { x: -0.5, y: 0.5 },
-  [HandleType.LeftCenter]: { x: -0.5, y: 0.0 },
+const HANDLE_LOCAL_POSITIONS: Record<HandleType, DOMPoint> = {
+  [HandleType.TopLeft]: new DOMPoint(-0.5, -0.5),
+  [HandleType.TopCenter]: new DOMPoint(0.0, -0.5),
+  [HandleType.TopRight]: new DOMPoint(0.5, -0.5),
+  [HandleType.RightCenter]: new DOMPoint(0.5, 0.0),
+  [HandleType.BottomRight]: new DOMPoint(0.5, 0.5),
+  [HandleType.BottomCenter]: new DOMPoint(0.0, 0.5),
+  [HandleType.BottomLeft]: new DOMPoint(-0.5, 0.5),
+  [HandleType.LeftCenter]: new DOMPoint(-0.5, 0.0),
   //
-  [HandleType.Rotate]: { x: 0.0, y: 0.0 },
-  [HandleType.Translate]: { x: 0.0, y: 0.0 },
+  [HandleType.Rotate]: new DOMPoint(0.0, 0.0),
+  [HandleType.Translate]: new DOMPoint(0.0, 0.0),
 }
 
 type RotationDrag = {
@@ -196,7 +195,7 @@ class TransformationTool {
     }
 
     if (this.activeHandle.type === HandleType.Translate) {
-      const newPosition = new Vector2(
+      const newPosition = new DOMPoint(
         pointerWorld.x - this.translationDrag.pointerOffset.x,
         pointerWorld.y - this.translationDrag.pointerOffset.y
       )
@@ -207,7 +206,7 @@ class TransformationTool {
 
     const { newScale, newPosition } = this.scaleObjectWithHandle(
       this.activeHandle.type,
-      new Vector2(pointerWorld.x, pointerWorld.y),
+      new DOMPoint(pointerWorld.x, pointerWorld.y),
       this.element
     )
     this.element.setPosition(newPosition)
@@ -388,7 +387,7 @@ class TransformationTool {
 
   private scaleObjectWithHandle(
     handleType: HandleType,
-    pointerWorld: Vector2,
+    pointerWorld: DOMPoint,
     element: SceneElement
   ) {
     const stationaryHandleType = OPPOSITE_HANDLES[handleType]
@@ -422,10 +421,10 @@ class TransformationTool {
       x: PDrag.x - PFixed.x,
       y: PDrag.y - PFixed.y,
     }
-    const DWorld = {
-      x: pointerWorld.x - stationaryHandleWorld.x,
-      y: pointerWorld.y - stationaryHandleWorld.y,
-    }
+    const DWorld = new DOMPoint(
+      pointerWorld.x - stationaryHandleWorld.x,
+      pointerWorld.y - stationaryHandleWorld.y
+    )
 
     // Undo rotation on world difference
     const angleRad = this.degToRad(element.getRotation())
@@ -433,7 +432,7 @@ class TransformationTool {
 
     // Compute new state
     const elementScale = element.getScale()
-    const newScale = { x: elementScale.x, y: elementScale.y }
+    const newScale = new DOMPoint(elementScale.x, elementScale.y)
     if (Math.abs(DLocal.x) > 1e-6) {
       newScale.x = DLocalNew.x / DLocal.x
     }
@@ -446,12 +445,12 @@ class TransformationTool {
     newScale.y = Math.max(newScale.y, 0.01)
 
     // Compute new position so stationary handle stays fixed
-    const scaled_P_fixed_new = { x: newScale.x * PFixed.x, y: newScale.y * PFixed.y }
-    const rotated_scaled_P_fixed_new = this.rotateVec(scaled_P_fixed_new, angleRad)
-    const newPosition = {
-      x: stationaryHandleWorld.x - rotated_scaled_P_fixed_new.x,
-      y: stationaryHandleWorld.y - rotated_scaled_P_fixed_new.y,
-    }
+    const scaledPFixedNew = new DOMPoint(newScale.x * PFixed.x, newScale.y * PFixed.y)
+    const rotatedScaledPFixedNew = this.rotateVec(scaledPFixedNew, angleRad)
+    const newPosition = new DOMPoint(
+      stationaryHandleWorld.x - rotatedScaledPFixedNew.x,
+      stationaryHandleWorld.y - rotatedScaledPFixedNew.y
+    )
 
     return { newScale, newPosition }
   }
@@ -460,16 +459,16 @@ class TransformationTool {
     return (deg * Math.PI) / 180
   }
 
-  private inverseRotateVec(vec: Vector2, angleRad: number): Vector2 {
+  private inverseRotateVec(vec: DOMPoint, angleRad: number): DOMPoint {
     // Rotate by -angle
     return this.rotateVec(vec, -angleRad)
   }
 
-  private rotateVec(vec: Vector2, angleRad: number): Vector2 {
+  private rotateVec(vec: DOMPoint, angleRad: number): DOMPoint {
     const cos = Math.cos(angleRad)
     const sin = Math.sin(angleRad)
 
-    return new Vector2(vec.x * cos - vec.y * sin, vec.x * sin + vec.y * cos)
+    return new DOMPoint(vec.x * cos - vec.y * sin, vec.x * sin + vec.y * cos)
   }
 
   private normalizeAngle(angle: number): number {

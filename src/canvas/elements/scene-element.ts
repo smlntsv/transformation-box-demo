@@ -1,21 +1,20 @@
 import type { BaseElementConfig, SceneConfig } from '../../types/scene-config.ts'
-import { Vector2 } from '../vector2.ts'
 
 abstract class SceneElement {
   protected id: number
-  protected position: Vector2
-  protected size: Vector2
+  protected position: DOMPoint
+  protected size: DOMPoint
   protected rotation: number
   protected zIndex: number
-  protected scale: Vector2
+  protected scale: DOMPoint
   protected _matrix: DOMMatrix
   protected matrixNeedsUpdate: boolean
 
   protected constructor(config: BaseElementConfig) {
     this.id = config.id
-    this.position = new Vector2(config.position.x, config.position.y)
-    this.size = new Vector2(config.size.x, config.size.y)
-    this.scale = new Vector2(config.scale.x, config.scale.y)
+    this.position = new DOMPoint(config.position.x, config.position.y)
+    this.size = new DOMPoint(config.size.x, config.size.y)
+    this.scale = new DOMPoint(config.scale.x, config.scale.y)
     this.rotation = config.rotation
     this.zIndex = config.zIndex
     this._matrix = new DOMMatrix()
@@ -84,11 +83,11 @@ abstract class SceneElement {
     ]
   }
 
-  public getPosition(): Vector2 {
+  public getPosition(): DOMPoint {
     return this.position
   }
 
-  public setPosition(newPosition: Vector2): void {
+  public setPosition(newPosition: DOMPoint): void {
     this.position = newPosition
     this.matrixNeedsUpdate = true
   }
@@ -97,15 +96,15 @@ abstract class SceneElement {
     return this.rotation
   }
 
-  public getScale(): Vector2 {
+  public getScale(): DOMPoint {
     return this.scale
   }
 
-  public setScale(scale: Vector2): void {
+  public setScale(scale: DOMPoint): void {
     this.scale = scale
   }
 
-  public getSize(): Vector2 {
+  public getSize(): DOMPoint {
     return this.size
   }
 
