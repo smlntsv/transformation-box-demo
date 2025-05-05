@@ -8,11 +8,7 @@ import { createSceneElement } from './create-scene-element.ts'
 import type { ArtboardResolution } from '../components/ArtboardResolutionSelect.vue'
 import type { Zoom } from '../components/ZoomSelect.vue'
 import { TransformationTool } from './transformation-tool.ts'
-import {
-  SceneElementEvent,
-  SceneElementEventManager,
-  type SceneEventListener,
-} from './scene-element-event-manager.ts'
+import { SceneEvent, type SceneEventListener, SceneEventManager } from './scene-event-manager.ts'
 
 class PreviewCanvasManager {
   private readonly canvas: HTMLCanvasElement
@@ -20,7 +16,7 @@ class PreviewCanvasManager {
   private readonly camera: Camera
   private interactionManager: InteractionManager
   private artboardResolution: ArtboardResolution
-  private sceneElementEventManager: SceneElementEventManager
+  private sceneElementEventManager: SceneEventManager
 
   private sceneElements: Map<SceneElement['id'], SceneElement>
   private selectedElement: SceneElement | null
@@ -46,7 +42,7 @@ class PreviewCanvasManager {
       this.onScroll
     )
     this.artboardResolution = { width: 0, height: 0 } // TODO: set actual value
-    this.sceneElementEventManager = new SceneElementEventManager()
+    this.sceneElementEventManager = new SceneEventManager()
 
     this.sceneElements = new Map()
     this.selectedElement = null
@@ -62,18 +58,15 @@ class PreviewCanvasManager {
     this.context = context
   }
 
-  public addEventListener<T extends SceneElementEvent>(type: T, listener: SceneEventListener<T>) {
+  public addEventListener<T extends SceneEvent>(type: T, listener: SceneEventListener<T>) {
     this.sceneElementEventManager.addEventListener(type, listener)
   }
 
-  public removeEventListener<T extends SceneElementEvent>(
-    type: T,
-    listener: SceneEventListener<T>
-  ) {
+  public removeEventListener<T extends SceneEvent>(type: T, listener: SceneEventListener<T>) {
     this.sceneElementEventManager.removeEventListener(type, listener)
   }
 
-  public notifyListeners<T extends SceneElementEvent>(
+  public notifyListeners<T extends SceneEvent>(
     type: T,
     ...args: Parameters<SceneEventListener<T>>
   ) {
@@ -238,7 +231,7 @@ class PreviewCanvasManager {
     if (!isHandled && !cursor) {
       const hitSceneElement = this.hitTestScreenElements(screenX, screenY)
       this.notifyListeners(
-        SceneElementEvent.Hover,
+        SceneEvent.ElementHover,
         hitSceneElement ? hitSceneElement.getId() : null
       )
       cursor = hitSceneElement ? 'pointer' : null
@@ -258,7 +251,7 @@ class PreviewCanvasManager {
     }
 
     const hitSceneElement = this.hitTestScreenElements(screenX, screenY)
-    this.notifyListeners(SceneElementEvent.Select, hitSceneElement ? hitSceneElement.getId() : null)
+    this.notifyListeners(SceneEvent.ElementSelect, hitSceneElement ? hitSceneElement.getId() : null)
     if (hitSceneElement) {
       return
     }
@@ -272,7 +265,7 @@ class PreviewCanvasManager {
       const transformedElement = this.transformationTool.getTransformedElement()
       if (transformedElement) {
         const sceneElementConfig = transformedElement.toSceneConfig()
-        this.notifyListeners(SceneElementEvent.Transform, sceneElementConfig)
+        this.notifyListeners(SceneEvent.ElementTransform, sceneElementConfig)
       }
 
       this.transformationTool.onPointerUp()
@@ -305,6 +298,8 @@ class PreviewCanvasManager {
 
   private onScroll(zoomDelta: number, screenX: number, screenY: number): void {
     this.camera.adjustZoomWithBounds(zoomDelta, screenX, screenY)
+    const currentZoom = this.camera.getZoom()
+    this.notifyListeners(SceneEvent.ZoomChange, currentZoom)
     this.render()
   }
 
@@ -323,5 +318,5 @@ class PreviewCanvasManager {
   }
 }
 
-export { SceneElementEvent }
+export { SceneEvent }
 export { PreviewCanvasManager }

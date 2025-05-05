@@ -53,8 +53,8 @@ const demoScene = ref<SceneConfig[]>([
       v-model:elements="demoScene"
       v-model:hovered="hoveredSceneElementId"
       v-model:selected="selectedSceneElementId"
+      v-model:zoom="zoom"
       :artboard-resolution="artboardResolution"
-      :zoom="zoom"
     />
 
     <div class="base-secondary-container options">

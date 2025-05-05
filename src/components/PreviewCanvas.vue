@@ -8,20 +8,20 @@ import {
   useTemplateRef,
   watch,
 } from 'vue'
+import { PreviewCanvasManager, SceneEvent } from './../canvas/preview-canvas-manager.ts'
 import type { ModelRef } from 'vue'
 import type { SceneConfig } from '../types/scene-config.ts'
-import type { Resolution } from './ResolutionSelect.vue'
+import type { ArtboardResolution } from './ArtboardResolutionSelect.vue'
 import type { Zoom } from './ZoomSelect.vue'
-import { PreviewCanvasManager, SceneElementEvent } from './../canvas/preview-canvas-manager.ts'
 
-const { artboardResolution, zoom } = defineProps<{
-  artboardResolution: Resolution
-  zoom: Zoom
+const { artboardResolution } = defineProps<{
+  artboardResolution: ArtboardResolution
 }>()
 
 const selected = defineModel<SceneConfig['id'] | null>('selected', { default: null })
 const hovered = defineModel<SceneConfig['id'] | null>('hovered', { default: null })
 const elements = defineModel<SceneConfig[]>('elements', { default: [] })
+const zoom = defineModel<Zoom>('zoom', { default: 1 })
 const canvasRef = useTemplateRef('canvas')
 const manager = ref<PreviewCanvasManager>()
 
@@ -65,30 +65,32 @@ function onElementTransform(sceneConfig: SceneConfig) {
   }
 }
 
+function onZoomChange(newZoom: number) {
+  zoom.value = newZoom
+}
+
 onMounted(() => {
   manager.value = new PreviewCanvasManager(canvasRef.value as HTMLCanvasElement)
-  manager.value.addEventListener(SceneElementEvent.Hover, onElementHover)
-  manager.value.addEventListener(SceneElementEvent.Select, onElementSelect)
-  manager.value.addEventListener(SceneElementEvent.Transform, onElementTransform)
+  manager.value.addEventListener(SceneEvent.ElementHover, onElementHover)
+  manager.value.addEventListener(SceneEvent.ElementSelect, onElementSelect)
+  manager.value.addEventListener(SceneEvent.ElementTransform, onElementTransform)
+  manager.value.addEventListener(SceneEvent.ZoomChange, onZoomChange)
   manager.value.onElementsChange(elements.value)
   manager.value.onArtboardResolutionChange(artboardResolution)
-  manager.value.onZoomChange(zoom)
+  manager.value.onZoomChange(zoom.value)
   manager.value.render()
 })
 
 watch(
   () => artboardResolution,
-  (newArtboardResolution: Resolution) => {
+  (newArtboardResolution: ArtboardResolution) => {
     manager.value?.onArtboardResolutionChange(newArtboardResolution)
   }
 )
 
-watch(
-  () => zoom,
-  (newZoom) => {
-    manager.value?.onZoomChange(newZoom)
-  }
-)
+watch(zoom, (newZoom) => {
+  manager.value?.onZoomChange(newZoom)
+})
 
 watch(elements, (newElements) => {
   manager.value?.onElementsChange(newElements)
@@ -103,9 +105,10 @@ watch(selected, (newSelected) => {
 })
 
 onBeforeUnmount(() => {
-  manager.value?.removeEventListener(SceneElementEvent.Hover, onElementHover)
-  manager.value?.removeEventListener(SceneElementEvent.Select, onElementSelect)
-  manager.value?.removeEventListener(SceneElementEvent.Transform, onElementTransform)
+  manager.value?.removeEventListener(SceneEvent.ElementHover, onElementHover)
+  manager.value?.removeEventListener(SceneEvent.ElementSelect, onElementSelect)
+  manager.value?.removeEventListener(SceneEvent.ElementTransform, onElementTransform)
+  manager.value?.removeEventListener(SceneEvent.ZoomChange, onZoomChange)
   manager.value?.destroy()
 })
 </script>
