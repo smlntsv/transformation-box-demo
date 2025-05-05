@@ -14,8 +14,8 @@ import type { Resolution } from './ResolutionSelect.vue'
 import type { Zoom } from './ZoomSelect.vue'
 import { PreviewCanvasManager, SceneElementEvent } from './../canvas/preview-canvas-manager.ts'
 
-const { resolution, zoom } = defineProps<{
-  resolution: Resolution
+const { artboardResolution, zoom } = defineProps<{
+  artboardResolution: Resolution
   zoom: Zoom
 }>()
 
@@ -71,15 +71,15 @@ onMounted(() => {
   manager.value.addEventListener(SceneElementEvent.Select, onElementSelect)
   manager.value.addEventListener(SceneElementEvent.Transform, onElementTransform)
   manager.value.onElementsChange(elements.value)
-  manager.value.onResolutionChange(resolution)
+  manager.value.onArtboardResolutionChange(artboardResolution)
   manager.value.onZoomChange(zoom)
   manager.value.render()
 })
 
 watch(
-  () => resolution,
-  (newResolution: Resolution) => {
-    manager.value?.onResolutionChange(newResolution)
+  () => artboardResolution,
+  (newArtboardResolution: Resolution) => {
+    manager.value?.onArtboardResolutionChange(newArtboardResolution)
   }
 )
 

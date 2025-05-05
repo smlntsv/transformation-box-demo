@@ -5,7 +5,7 @@ import { InteractionManager } from './interaction-manager.ts'
 import type { SceneConfig } from '../types/scene-config.ts'
 import type { SceneElement } from './elements/scene-element.ts'
 import { createSceneElement } from './create-scene-element.ts'
-import type { Resolution } from '../components/ResolutionSelect.vue'
+import type { ArtboardResolution } from '../components/ArtboardResolutionSelect.vue'
 import type { Zoom } from '../components/ZoomSelect.vue'
 import { TransformationTool } from './transformation-tool.ts'
 import {
@@ -19,10 +19,9 @@ class PreviewCanvasManager {
   private readonly viewport: Viewport
   private readonly camera: Camera
   private interactionManager: InteractionManager
-  private artboardResolution: Resolution
+  private artboardResolution: ArtboardResolution
   private sceneElementEventManager: SceneElementEventManager
 
-  // TODO: move to the Scene class?
   private sceneElements: Map<SceneElement['id'], SceneElement>
   private selectedElement: SceneElement | null
   private hoveredElement: SceneElement | null
@@ -81,8 +80,8 @@ class PreviewCanvasManager {
     this.sceneElementEventManager.notifyListeners(type, ...args)
   }
 
-  public onResolutionChange(resolution: Resolution) {
-    this.artboardResolution = resolution
+  public onArtboardResolutionChange(artboardResolution: ArtboardResolution) {
+    this.artboardResolution = artboardResolution
     this.render()
   }
 

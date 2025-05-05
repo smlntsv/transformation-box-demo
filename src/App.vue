@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import ResolutionSelect, { type Resolution } from './components/ResolutionSelect.vue'
+import ArtboardResolutionSelect, {
+  type ArtboardResolution,
+} from './components/ArtboardResolutionSelect.vue'
 import ZoomSelect, { type Zoom } from './components/ZoomSelect.vue'
 import SceneElementPreview from './components/SceneElementPreview.vue'
 import snowImage from './assets/snow-1280x853.jpg'
 import type { SceneConfig } from './types/scene-config.ts'
 import PreviewCanvas from './components/PreviewCanvas.vue'
 
-const resolution = ref<Resolution>({ width: 640, height: 480 })
+const artboardResolution = ref<ArtboardResolution>({ width: 640, height: 480 })
 const zoom = ref<Zoom>(1)
 const hoveredSceneElementId = ref<SceneConfig['id'] | null>(null)
 const selectedSceneElementId = ref<SceneConfig['id'] | null>(null)
@@ -51,12 +53,12 @@ const demoScene = ref<SceneConfig[]>([
       v-model:elements="demoScene"
       v-model:hovered="hoveredSceneElementId"
       v-model:selected="selectedSceneElementId"
-      :resolution="resolution"
+      :artboard-resolution="artboardResolution"
       :zoom="zoom"
     />
 
     <div class="base-secondary-container options">
-      <ResolutionSelect v-model="resolution" />
+      <ArtboardResolutionSelect v-model="artboardResolution" />
       <ZoomSelect v-model="zoom" />
     </div>
 

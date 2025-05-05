@@ -2,17 +2,17 @@
 import BaseSelect from './BaseSelect.vue'
 import { defineModel } from 'vue'
 
-export type Resolution = {
+export type ArtboardResolution = {
   width: number
   height: number
 }
 
-export type ResolutionOption = {
+export type ArtboardResolutionOption = {
   label: string
-  value: Resolution
+  value: ArtboardResolution
 }
 
-const RESOLUTION_OPTIONS: ResolutionOption[] = [
+const ARTBOARD_RESOLUTION_OPTIONS: ArtboardResolutionOption[] = [
   {
     label: '1920x1080 16:9',
     value: { width: 1920, height: 1080 },
@@ -31,9 +31,13 @@ const RESOLUTION_OPTIONS: ResolutionOption[] = [
   },
 ]
 
-const resolution = defineModel<Resolution>()
+const artboardResolution = defineModel<ArtboardResolution>()
 </script>
 
 <template>
-  <BaseSelect v-model="resolution" label="Resolution" :options="RESOLUTION_OPTIONS" />
+  <BaseSelect
+    v-model="artboardResolution"
+    label="Resolution"
+    :options="ARTBOARD_RESOLUTION_OPTIONS"
+  />
 </template>
