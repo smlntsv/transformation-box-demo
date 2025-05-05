@@ -8,22 +8,19 @@ import { createSceneElement } from './create-scene-element.ts'
 import type { Resolution } from '../components/ResolutionSelect.vue'
 import type { Zoom } from '../components/ZoomSelect.vue'
 import { TransformationTool } from './transformation-tool.ts'
-
-export type SceneElementEventListener = (id: SceneElement['id'] | null) => void
-export enum SceneElementEvent {
-  Hover,
-  Select,
-  Transform,
-}
+import {
+  SceneElementEvent,
+  SceneElementEventManager,
+  type SceneEventListener,
+} from './scene-element-event-manager.ts'
 
 class PreviewCanvasManager {
   private readonly canvas: HTMLCanvasElement
-  private viewport: Viewport
-  private camera: Camera
+  private readonly viewport: Viewport
+  private readonly camera: Camera
   private interactionManager: InteractionManager
   private artboardResolution: Resolution
-  private readonly elementHoverListeners: Set<SceneElementEventListener>
-  private readonly elementSelectListeners: Set<SceneElementEventListener>
+  private sceneElementEventManager: SceneElementEventManager
 
   // TODO: move to the Scene class?
   private sceneElements: Map<SceneElement['id'], SceneElement>
@@ -34,9 +31,9 @@ class PreviewCanvasManager {
   private readonly context: CanvasRenderingContext2D
 
   constructor(canvas: HTMLCanvasElement) {
+    this.onPointerDown = this.onPointerDown.bind(this)
+    this.onPointerUp = this.onPointerUp.bind(this)
     this.onPointerMove = this.onPointerMove.bind(this)
-    this.onClick = this.onClick.bind(this)
-    this.onPanning = this.onPanning.bind(this)
     this.onScroll = this.onScroll.bind(this)
 
     this.canvas = canvas
@@ -44,14 +41,13 @@ class PreviewCanvasManager {
     this.camera = new Camera(new Vector2(0, 0), 1) // TODO: set actual value
     this.interactionManager = new InteractionManager(
       this.canvas,
+      this.onPointerDown,
+      this.onPointerUp,
       this.onPointerMove,
-      this.onClick,
-      this.onPanning,
       this.onScroll
     )
     this.artboardResolution = { width: 0, height: 0 } // TODO: set actual value
-    this.elementHoverListeners = new Set()
-    this.elementSelectListeners = new Set()
+    this.sceneElementEventManager = new SceneElementEventManager()
 
     this.sceneElements = new Map()
     this.selectedElement = null
@@ -67,26 +63,22 @@ class PreviewCanvasManager {
     this.context = context
   }
 
-  public addEventListener(type: SceneElementEvent, listener: SceneElementEventListener) {
-    if (type === SceneElementEvent.Hover) this.elementHoverListeners.add(listener)
-    if (type === SceneElementEvent.Select) this.elementSelectListeners.add(listener)
+  public addEventListener<T extends SceneElementEvent>(type: T, listener: SceneEventListener<T>) {
+    this.sceneElementEventManager.addEventListener(type, listener)
   }
 
-  public removeEventListener(type: SceneElementEvent, listener: SceneElementEventListener) {
-    if (type === SceneElementEvent.Hover) this.elementHoverListeners.delete(listener)
-    if (type === SceneElementEvent.Select) this.elementSelectListeners.delete(listener)
+  public removeEventListener<T extends SceneElementEvent>(
+    type: T,
+    listener: SceneEventListener<T>
+  ) {
+    this.sceneElementEventManager.removeEventListener(type, listener)
   }
 
-  private notifyElementHover(id: SceneElement['id'] | null) {
-    for (const hoverListener of this.elementHoverListeners) {
-      hoverListener(id)
-    }
-  }
-
-  private notifyElementSelect(id: SceneElement['id'] | null) {
-    for (const selectListener of this.elementSelectListeners) {
-      selectListener(id)
-    }
+  public notifyListeners<T extends SceneElementEvent>(
+    type: T,
+    ...args: Parameters<SceneEventListener<T>>
+  ) {
+    this.sceneElementEventManager.notifyListeners(type, ...args)
   }
 
   public onResolutionChange(resolution: Resolution) {
@@ -108,8 +100,6 @@ class PreviewCanvasManager {
     for (const configElement of sceneConfig) {
       const sceneElement = createSceneElement(configElement)
       sceneElements.set(sceneElement['id'], sceneElement)
-
-      this.transformationTool = new TransformationTool(sceneElement, this.viewport, this.camera)
     }
 
     this.sceneElements = sceneElements
@@ -150,8 +140,6 @@ class PreviewCanvasManager {
   public destroy() {
     this.viewport.destroy()
     this.interactionManager.destroy()
-    this.elementHoverListeners.clear()
-    this.elementSelectListeners.clear()
   }
 
   public render() {
@@ -228,28 +216,58 @@ class PreviewCanvasManager {
     this.context.restore()
   }
 
-  private onPointerMove(screenX: number, screenY: number) {
-    const hitElement = this.hitTest(screenX, screenY)
-    this.notifyElementHover(hitElement ? hitElement.getId() : null)
+  private onPointerMove(screenX: number, screenY: number): void {
+    if (this.transformationTool && this.transformationTool.onPointerMove(screenX, screenY)) {
+      this.render()
+      return
+    }
 
-    return Boolean(hitElement)
+    if (this.camera.getIsPanning()) {
+      this.camera.panTo(screenX, screenY)
+      this.render()
+      return
+    }
+
+    const hitSceneElement = this.hitTestScreenElements(screenX, screenY)
+    this.notifyListeners(SceneElementEvent.Hover, hitSceneElement ? hitSceneElement.getId() : null)
   }
 
-  private onClick(screenX: number, screenY: number): boolean {
-    const hitElement = this.hitTest(screenX, screenY)
-    this.notifyElementSelect(hitElement ? hitElement.getId() : null)
+  private onPointerDown(screenX: number, screenY: number): void {
+    if (this.transformationTool?.onPointerDown(screenX, screenY)) {
+      this.render()
+      return
+    }
 
-    return Boolean(hitElement)
+    const hitSceneElement = this.hitTestScreenElements(screenX, screenY)
+    this.notifyListeners(SceneElementEvent.Select, hitSceneElement ? hitSceneElement.getId() : null)
+    if (hitSceneElement) {
+      return
+    }
+
+    this.camera.beginPanning(screenX, screenY)
+    this.render()
   }
 
-  private hitTest(screenX: number, screenY: number): SceneElement | null {
+  private onPointerUp(): void {
+    if (this.transformationTool) {
+      const transformedElement = this.transformationTool.getTransformedElement()
+      if (transformedElement) {
+        const sceneElementConfig = transformedElement.toSceneConfig()
+        this.notifyListeners(SceneElementEvent.Transform, sceneElementConfig)
+      }
+
+      this.transformationTool.onPointerUp()
+    }
+
+    if (this.camera.getIsPanning()) {
+      this.camera.endPanning()
+    }
+  }
+
+  private hitTestScreenElements(screenX: number, screenY: number): SceneElement | null {
     const screenPoint = new DOMPoint(screenX, screenY)
     const inverseMatrix = this.camera.matrix.inverse()
     const worldPoint = screenPoint.matrixTransform(inverseMatrix)
-
-    if (this.transformationTool) {
-      // Check if of the transformation tool handles click
-    }
 
     const sceneElementsSortedDesc: SceneElement[] = Array.from(this.sceneElements.values()).sort(
       (a, b) => b.getZIndex() - a.getZIndex()
@@ -264,18 +282,9 @@ class PreviewCanvasManager {
     return null
   }
 
-  private onPanning(screenDX: number, screenDY: number): boolean {
-    this.camera.moveBy(new Vector2(screenDX, screenDY))
-    this.render()
-
-    return true
-  }
-
-  private onScroll(zoomDelta: number, screenX: number, screenY: number): boolean {
+  private onScroll(zoomDelta: number, screenX: number, screenY: number): void {
     this.camera.adjustZoomWithBounds(zoomDelta, screenX, screenY)
     this.render()
-
-    return true
   }
 
   private drawArtboard() {
@@ -293,4 +302,5 @@ class PreviewCanvasManager {
   }
 }
 
+export { SceneElementEvent }
 export { PreviewCanvasManager }

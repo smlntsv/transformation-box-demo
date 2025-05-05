@@ -8,6 +8,8 @@ class Camera {
   private readonly maxZoom: number
   private _matrix: DOMMatrix
   private matrixNeedsUpdate: boolean
+  private isPanning: boolean
+  private lastPointerPosition: Vector2 | null
 
   constructor(
     position: Vector2 = new Vector2(0, 0),
@@ -22,6 +24,34 @@ class Camera {
     this.rotation = 0
     this._matrix = new DOMMatrix()
     this.matrixNeedsUpdate = true
+    this.isPanning = false
+    this.lastPointerPosition = null
+  }
+
+  public getIsPanning(): boolean {
+    return this.isPanning
+  }
+
+  public beginPanning(screenX: number, screenY: number): void {
+    this.lastPointerPosition = new Vector2(screenX, screenY)
+    this.isPanning = true
+  }
+
+  public endPanning(): void {
+    this.lastPointerPosition = null
+    this.isPanning = false
+  }
+
+  public panTo(screenX: number, screenY: number): void {
+    if (!this.isPanning || !this.lastPointerPosition) {
+      return
+    }
+
+    const dx = screenX - this.lastPointerPosition.x
+    const dy = screenY - this.lastPointerPosition.y
+
+    this.moveBy(new Vector2(dx, dy))
+    this.lastPointerPosition = new Vector2(screenX, screenY)
   }
 
   public get matrix(): DOMMatrix {
