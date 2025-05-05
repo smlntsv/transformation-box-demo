@@ -33,11 +33,6 @@ function updateSelectedHoveredState(
     if (state.value) {
       state.value = null
     }
-
-    if (canvasRef.value && canvasRef.value.style.cursor !== 'inherit') {
-      canvasRef.value.style.cursor = 'inherit'
-    }
-
     return
   }
 
@@ -46,10 +41,6 @@ function updateSelectedHoveredState(
       state.value = element.id
       break
     }
-  }
-
-  if (canvasRef.value && canvasRef.value.style.cursor !== 'pointer') {
-    canvasRef.value.style.cursor = 'pointer'
   }
 }
 

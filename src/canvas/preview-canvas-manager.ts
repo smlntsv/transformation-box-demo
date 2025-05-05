@@ -216,20 +216,40 @@ class PreviewCanvasManager {
     this.context.restore()
   }
 
+  private setCursor(cursor: string | null): void {
+    this.canvas.style.cursor = cursor ?? 'default'
+  }
+
   private onPointerMove(screenX: number, screenY: number): void {
-    if (this.transformationTool && this.transformationTool.onPointerMove(screenX, screenY)) {
-      this.render()
-      return
+    let cursor: string | null = null
+    let isHandled: boolean = false
+    let mustRender = false
+
+    if (this.transformationTool) {
+      isHandled = this.transformationTool.onPointerMove(screenX, screenY)
+      cursor = this.transformationTool.getCursor()
+      mustRender = true
     }
 
-    if (this.camera.getIsPanning()) {
+    if (!isHandled && this.camera.getIsPanning()) {
       this.camera.panTo(screenX, screenY)
-      this.render()
-      return
+      cursor = 'grabbing'
     }
 
-    const hitSceneElement = this.hitTestScreenElements(screenX, screenY)
-    this.notifyListeners(SceneElementEvent.Hover, hitSceneElement ? hitSceneElement.getId() : null)
+    if (!isHandled && !cursor) {
+      const hitSceneElement = this.hitTestScreenElements(screenX, screenY)
+      this.notifyListeners(
+        SceneElementEvent.Hover,
+        hitSceneElement ? hitSceneElement.getId() : null
+      )
+      cursor = hitSceneElement ? 'pointer' : null
+    }
+
+    this.setCursor(cursor)
+
+    if (isHandled || cursor || mustRender) {
+      this.render()
+    }
   }
 
   private onPointerDown(screenX: number, screenY: number): void {
@@ -257,10 +277,12 @@ class PreviewCanvasManager {
       }
 
       this.transformationTool.onPointerUp()
+      this.setCursor(null)
     }
 
     if (this.camera.getIsPanning()) {
       this.camera.endPanning()
+      this.setCursor(null)
     }
   }
 

@@ -102,7 +102,7 @@ class TransformationTool {
   private viewport: Viewport
   private camera: Camera
   private handles: Handle[]
-  private readonly hoveredHandle: Handle | null
+  private hoveredHandle: Handle | null
   private activeHandle: Handle | null
   private rotationDrag: RotationDrag
   private translationDrag: TranslationDrag
@@ -136,6 +136,18 @@ class TransformationTool {
     return this.element
   }
 
+  public getCursor(): string | null {
+    if (this.activeHandle) {
+      return HANDLE_CURSOR[this.activeHandle.type]
+    }
+
+    if (this.hoveredHandle) {
+      return HANDLE_CURSOR[this.hoveredHandle.type]
+    }
+
+    return null
+  }
+
   public onPointerDown(screenX: number, screenY: number): boolean {
     this.activeHandle = this.hitTestHandles(screenX, screenY)
     const screenPoint = new DOMPoint(screenX, screenY)
@@ -163,10 +175,8 @@ class TransformationTool {
 
   public onPointerMove(screenX: number, screenY: number): boolean {
     if (!this.activeHandle) {
-      // const hoveredHandle = this.hitTestHandles(screenX, screenY)
-      // TODO: use cursor for canvas element
-      // const cursor = hoveredHandle ? HANDLE_CURSOR[hoveredHandle.type] : 'default'
-      return false
+      this.hoveredHandle = this.hitTestHandles(screenX, screenY)
+      return Boolean(this.hoveredHandle)
     }
 
     const screenPoint = new DOMPoint(screenX, screenY)
@@ -253,7 +263,6 @@ class TransformationTool {
       const radius = HANDLE_RADIUS[type]
       const isRotationHandle = type === HandleType.Rotate
       const isHovered = this.hoveredHandle ? this.hoveredHandle.type === type : false
-
       this.drawHandle(context, position.x, position.y, radius, isRotationHandle, isHovered)
     }
   }
