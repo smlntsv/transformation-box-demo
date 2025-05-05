@@ -9,6 +9,14 @@ class RectangleSceneElement extends SceneElement {
     this.color = config.color
   }
 
+  public toSceneConfig(): RectangleConfig {
+    return {
+      ...this.toBaseElementConfig(),
+      type: 'rectangle',
+      color: this.color,
+    }
+  }
+
   protected drawSelf(context: CanvasRenderingContext2D) {
     context.fillStyle = this.color
     context.fillRect(-this.size.x / 2, -this.size.y / 2, this.size.x, this.size.y)

@@ -1,4 +1,4 @@
-import type { BaseElementConfig } from '../../types/scene-config.ts'
+import type { BaseElementConfig, SceneConfig } from '../../types/scene-config.ts'
 import { Vector2 } from '../vector2.ts'
 
 abstract class SceneElement {
@@ -21,6 +21,8 @@ abstract class SceneElement {
     this._matrix = new DOMMatrix()
     this.matrixNeedsUpdate = true
   }
+
+  public abstract toSceneConfig(): SceneConfig
 
   protected abstract drawSelf(context: CanvasRenderingContext2D): void
 
@@ -80,6 +82,47 @@ abstract class SceneElement {
       new DOMPoint(halfWidth, halfHeight),
       new DOMPoint(-halfWidth, halfHeight),
     ]
+  }
+
+  public getPosition(): Vector2 {
+    return this.position
+  }
+
+  public setPosition(newPosition: Vector2): void {
+    this.position = newPosition
+    this.matrixNeedsUpdate = true
+  }
+
+  public getRotation(): number {
+    return this.rotation
+  }
+
+  public getScale(): Vector2 {
+    return this.scale
+  }
+
+  public setScale(scale: Vector2): void {
+    this.scale = scale
+  }
+
+  public getSize(): Vector2 {
+    return this.size
+  }
+
+  public setRotation(newRotation: number): void {
+    this.rotation = newRotation
+    this.matrixNeedsUpdate = true
+  }
+
+  protected toBaseElementConfig(): BaseElementConfig {
+    return {
+      id: this.id,
+      position: this.position,
+      size: this.size,
+      scale: this.scale,
+      rotation: this.rotation,
+      zIndex: this.zIndex,
+    }
   }
 }
 
